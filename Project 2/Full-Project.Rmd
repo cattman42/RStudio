@@ -1,0 +1,104 @@
+---
+title: "Change the title to one of your choice"
+author: "List all group members"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message=FALSE, warning=FALSE, fig.height = 4, fig.width = 6 )
+```
+
+
+```{r}
+library(tidyverse) 
+```
+
+
+```{r cachedChunk, cache=TRUE}
+# read in data 
+Colleges1 <- read.csv("https://ed-public-download.app.cloud.gov/downloads/Most-Recent-Cohorts-Scorecard-Elements.csv")
+Colleges2 <- read.csv("https://ed-public-download.app.cloud.gov/downloads/Most-Recent-Cohorts-Treasury-Elements.csv")
+Colleges3 <- read.csv("https://ed-public-download.app.cloud.gov/downloads/Most-Recent-Cohorts-All-Data-Elements.csv")
+# dimensions should be:
+# Colleges1 7112 by 190
+# Colleges2 7112 by 92
+# Colleges3 7112 by 1978
+#check that this is the case
+
+```
+
+Loading in Data Set
+```{r}
+colleges <- full_join(Colleges1, Colleges2)
+colleges <- full_join(colleges, Colleges3)
+colleges_searched <- select(colleges, INSTNM, NPT4_PUB, NPT4_PRIV, RET_FT4, RET_PT4, TUITIONFEE_IN, TUITIONFEE_OUT, ZIP, ADM_RATE, C100_4, DEP_INC_AVG, LO_INC_WDRAW_ORIG_YR2_RT)
+colleges_searched$NPT4_PUB = as.numeric(as.character(colleges_searched$NPT4_PUB))
+colleges_searched$NPT4_PRIV = as.numeric(as.character(colleges_searched$NPT4_PRIV))
+colleges_searched$RET_FT4 = as.numeric(as.character(colleges_searched$RET_FT4))
+colleges_searched$RET_PT4 = as.numeric(as.character(colleges_searched$RET_PT4))
+colleges_searched$TUITIONFEE_IN = as.numeric(as.character(colleges_searched$TUITIONFEE_IN))
+colleges_searched$TUITIONFEE_OUT = as.numeric(as.character(colleges_searched$TUITIONFEE_OUT))
+colleges_searched$ZIP = as.numeric(as.character(colleges_searched$ZIP))
+colleges_searched$ADM_RATE = as.numeric(as.character(colleges_searched$ADM_RATE))
+colleges_searched$C100_4 = as.numeric(as.character(colleges_searched$C100_4))
+colleges_searched$DEP_INC_AVG = as.numeric(as.character(colleges_searched$DEP_INC_AVG))
+#colleges_searched<- colleges_searched[!is.na(colleges_searched$NPT4_PUB),]
+head(colleges_searched)
+```
+
+Our group is interested in comparing colleges by state. What we’re planning to compare is tuition of public schools with private schools. We’d also like to compare retention, withdrawal, and graduation rate between state with a look at the north vs the south. The last thing we’d like to compare is if religious affiliation has any correlation to tuition prices. Once we have the data all setup we’d like to compare public vs private.
+
+
+```{r}
+colleges_searched$LO_INC_WDRAW_ORIG_YR2_RT <- as.numeric(as.character(colleges_searched$LO_INC_WDRAW_ORIG_YR2_RT))
+colleges_searched <- filter(colleges_searched, TUITIONFEE_IN > 1)
+colleges_searched$INST_PUB <- ifelse(colleges_searched$NPT4_PUB>1,1,0)
+scatter<- ggplot(data = colleges_searched, aes(x=TUITIONFEE_IN, y=LO_INC_WDRAW_ORIG_YR2_RT, color=as.factor(INST_PUB))) +
+  geom_point(stat = "identity") + 
+  xlab("Tution and Fees") + ylab("Low-income Students That Withdrew Within 2 Years") +
+  scale_color_discrete(name="Public vs Private",
+                       labels = c("Public", "Private")
+  )
+scatter
+```
+
+
+This graphic displays the relation of in-state college tuition and fees alongside low-income students (annual income of $30,000) withdrawal rate within two years. For viewing convenience, the graph has been colored by schools that are public (red) and those that are private (black). The graph shows a strong correlation of withdrawal, and free to less than $10,000 schooling. 
+
+
+```{r}
+#Second figure (figure or graph)
+```
+
+one or two paragraph discussion of second figure
+
+
+```{r}
+#Third figure (table or graph)
+```
+
+one or two paragraph discussion of third figure
+
+
+
+```{r}
+#Fourth figure (table or graph) - optional
+```
+
+one or two paragraph discussion of fourth figure
+
+
+
+```{r}
+#Fifth figure (table or graph) - optional
+```
+
+one or two paragraph discussion of fifth figure
+
+
+## Appendix 
+
+```{r}
+#Additional figure(s) if desired
+```

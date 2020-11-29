@@ -1,0 +1,171 @@
+---
+title: "Module 9: Webscraping part 2"
+author: "Data-Scientific Programming: Lawrence University"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE, fig.height = 4, fig.width = 6)
+```
+
+```{r}
+library(tidyverse)
+library(rvest) #used to scrape data from web
+library(robotstxt) #used to check whether a website can be scraped
+```
+
+
+## Section 9.2 Second Example
+
+Go to the [link](https://www.imdb.com/search/title/?title_type=feature&release_date=2019-01-01,2019-12-31&sort=boxoffice_gross_us,desc). 
+
+This site contains information on the 50 highest-grossing movies of 2019 (according to US box office revenue). We'll scrape this information. 
+
+#### 1) Read in page
+
+Read in the url
+
+```{r}
+page <- read_html("https://www.imdb.com/search/title/?title_type=feature&release_date=2019-01-01,2019-12-31&sort=boxoffice_gross_us,desc")
+```
+
+#### 2) Scrape titles
+
+Use Selector Gadget to help read in the titles. Format them as text. 
+
+```{r}
+title <- page %>%
+  html_nodes(".lister-item-header a") %>%
+  html_text()
+```
+
+#### 3) Scrape ratings
+
+Use Selector Gadget to help read in the ratings. Be sure to only scrape the ratings information. Format them as numeric. 
+
+```{r}
+rating <- page %>%
+  html_nodes(".ratings-imdb-rating strong") %>%
+  html_text() %>%
+  as.numeric()
+```
+
+#### 4) Scrape MPAA ratings
+
+Read in the MPAA ratings (G, PG, PG-13, R, NC-17). Format them as character. 
+
+```{r}
+MPAA_rating <- page %>%
+  html_nodes(".certificate") %>%
+  html_text() %>%
+  as.character()
+```
+
+What is the length of this vector? Why does it not match the lengths of the title and ratings vectors?
+
+```{r}
+length(title)
+```
+
+```{r}
+length(MPAA_rating)
+```
+
+There are 50 titles, but only 49 ratings. Notice that the film in line 37 does not have a rating. This will create problems when we try to put these in a tibble. Later on, we'll find a better way to scrape MPAA_rating. 
+
+#### 5) Scrape runtimes
+
+Read in the runtimes. We'll use `str_remove_all()` to eliminate excess text. Format as numeric
+
+```{r}
+runtime <- page %>%
+  html_nodes(".runtime") %>%
+  html_text() %>%
+  as.character() %>% 
+  str_remove_all(" min") %>% 
+  as.numeric()
+```
+
+#### 6) Scrape Genre
+
+Scrape movie genres. Eliminate the "\n" and get rid of excess spacing. Format as character. 
+
+```{r}
+genre <- page %>%
+  html_nodes(".genre") %>%
+  html_text() %>%
+  as.character() %>%
+  str_remove_all("\n") %>%
+  trimws()
+```
+
+####  7) Scrape Metascore
+
+Scrape metascores. Eliminate the "\n" and get rid of excess spacing. Format as numeric. 
+
+```{r}
+metascore <- page %>%
+  html_nodes(".metascore") %>%
+  html_text() %>%
+  as.character() %>%
+  str_remove_all("\n") %>%
+  str_trim() %>% 
+  as.numeric()
+```
+
+####  8) Scrape Votes
+
+Scrape number of votes. Remove all commas and convert to numeric. 
+
+```{r}
+votes <- page %>%
+  html_nodes(".sort-num_votes-visible span:nth-child(2)") %>%
+  html_text() %>%
+  str_remove_all(",") %>%              # remove all commas in each entry
+  as.numeric() %>% as.numeric()
+```
+
+#### 9) Scrape Gross
+
+Scrape film gross. Remove excess letters and characters and convert to numeric. 
+
+```{r}
+gross <- page %>%
+  html_nodes(".ghost~ .text-muted+ span") %>%
+  html_text() %>%
+  str_remove_all("\\$") %>%  #note \\ is required before special characters
+  str_remove_all("M") %>%
+  as.numeric()
+```
+  
+
+#### 10) Better way to scrape MPAA and metascore
+
+scrape MPAA rating and metascore in a way that results in vectors of length 50, with NA's for missing value(s). 
+
+```{r}
+MPAA_rating <- page %>%
+  html_nodes(".lister-item-header+.text-muted") %>%
+  html_text() %>%
+  str_replace("\n            \n", "\n           NA \n |" ) %>%
+  str_split("\\|") %>%
+  map(1, .default=NA)%>%
+  trimws() %>%
+  as.character()
+  head(MPAA_rating)
+```
+
+```{r}
+metascore <- page %>%
+  html_nodes(".ratings-bar") %>%
+  html_text() %>%
+  str_remove_all(" ") %>%
+  str_remove_all("\n") %>%
+  str_split("X") %>%
+  map(2, .default=NA) %>%
+  str_remove_all("Metascore") %>%
+  str_trim() %>%
+  as.numeric()
+head(metascore)
+```
+

@@ -1,0 +1,70 @@
+---
+title: 'Lake Winnebago Walleye Run'
+author: "Caleb Catt"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r include=FALSE}
+library(tidyverse)
+library(sqldf)
+library(ggpubr)
+```
+-------------------------------------------------
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message=FALSE, warning=FALSE)
+```
+
+```{r include=FALSE}
+fishData <- read.csv("fish_data.csv")
+fishSize <- read.csv("fish_size.csv")
+```
+
+```{r include=FALSE}
+fishData1 <- gather(fishData, sex, total, numM:numF)
+plot <- ggplot(data = fishData1)
+plot1 <- plot + geom_bar(aes(age, total, fill = sex), stat="identity", position="dodge")+
+  labs(x = "Age", y = "Total Harvested")+
+  ggtitle("2010 Lake Winnebago Walleye Run")+
+  scale_fill_discrete(name = "Sex",
+                      labels = c("Female","Male"))
+```
+
+```{r include=FALSE}
+plot2 <- ggplot(data = fishSize) + 
+  geom_bar(aes(x = Fish.Age, y = Length, fill=ifelse(Length > 13 & Length < 19, 'Eating Size','Generally Not Eaten'), labels=), stat="identity") +
+  labs(x = "Walleye Age", y = "Length in Inches") +
+  theme(legend.title = element_blank(), ) +
+  ggtitle("Preferred Size/Age to Keep Walleye")+
+  scale_fill_manual(values = c('Eating Size' = "green", 'Generally Not Eaten' = "red"))
+```
+
+The following graphs show harvest data on walleye.
+
+The first graph shows the "2010 Battle on Bago" totals on walleye harvested during the tournament.
+
+Totals are split by male and female as well as age to get a good representation on the number harvested.
+
+It's important that old males be released as they protect the hatcheries that the females lay. Also, a dwindling number of females harvested is a good sign in later ages as they carry the most eggs.
+
+The second graph shows the preferred size and age of a walleye to continue preservation of a lake's ecosystem.'
+
+
+
+```{r, fig.height=10, fig.width=10}
+figure <- ggarrange(plot1, plot2,
+                    ncol = 1, nrow = 2)
+figure
+```
+
+The information shown here is good to see!
+
+The most harvested group of walleye were 5 year old males. This lines up with the second chart on good age/size to keep.
+
+Another important thing to note is the ratio of male:female harvested. Male are harvested a lot more because fisherman generally try to return female in hopes of them laying more eggs to help with the ecosystem.
+
+All in all it seems like the fisherman of the 2010 Battle on Bago were responsible in the aspect of keeping the Lake Winnebago walleye levels up for next year.
+
+An interesting thing to note is that Lake Winnebago got rid of the size minimum (16") that it used to hold for walleye. Many thought this would hurt the overall population, even though the graph above shows that the largest are not kept often. This backs the theory held that the older fish will carry more eggs and protect the hatcheries better. 
+

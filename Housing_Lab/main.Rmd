@@ -1,0 +1,147 @@
+## Question 1
+
+##### Load the `tidyverse` package and read the file "Ames_Housing.csv". Assign it a name. 
+
+```{r}
+library(tidyverse)
+setwd("C:/Users/Cattc/OneDrive/Documents/CMSC 205/Code/Housing_Lab/")
+data <- read.csv(file = 'Ames_Housing.csv')
+```
+
+## Question 2
+
+##### The tibble contains 81 columns. We will only consider a handful of these. Create a tibble containing only the following columns. `Id`, `Neighborhood`, `YearBuilt`, `GrLivArea`, `GarageYrBlt`, `PavedDrive`, `PoolArea`, `MoSold`, `YrSold`, `SalePrice`. Display the `head` of the dataset. 
+
+```{r}
+arrangedData <- select(data, Id, Neighborhood, YearBuilt, GrLivArea, GarageYrBlt, PavedDrive, PoolArea, MoSold, YrSold, SalePrice)
+tb <- as_tibble(arrangedData)
+head(tb)
+```
+
+## Question 3
+
+##### How many houses sold for more than $500,000? What was the most expensive house? Filter the dataset to houses meeting this criterion, and sort in decreasing order, based on `Sale_Price`.
+
+```{r}
+SalePrice <- filter(tb, SalePrice > 500000) %>%
+  arrange(desc(SalePrice))
+```
+9 Houses were sold for more than $500,000
+The most expensive house was $755,000
+
+## Question 4
+
+##### A family looking to buy a home insists on the following conditions:
+1. The house must have a paved driveway.  
+2. The house house must have at least 3000 square feet. (Square feet are given by `GrLivArea`)    
+3. The house must be either new (built after 2000), or a century home (built before 1920). 
+4. The house must cost less than $400,000. 
+
+##### Create a tibble containing only houses that meet these conditions. How many such houses are there?
+
+```{r}
+tbConditions <- filter(tb, PavedDrive == 'Y' & GrLivArea >= 3000 & (YearBuilt > 2000 | YearBuilt < 1920) & SalePrice < 400000)
+head(tbConditions)
+```
+
+
+## Question 5
+
+##### Calculate the number of houses sold during each month of each year. During which month were the most most houses sold?
+
+```{r}
+tb %>% group_by(YrSold)
+```
+
+Type answer here. 
+
+## Question 6
+
+##### Create a new variable that gives the age of the house at the time it was sold. Sort the tibble from oldest to youngest at time of sale. 
+
+```{r}
+tb <- mutate(tb, 
+             age = YrSold-YearBuilt)
+```
+
+## Question 7
+
+##### Calculate the mean saleprice for each neighborhood. Also include the median year built, and the total number of homes sold in each neighborhood. Order the neighborhoods from most expensive to least. 
+
+```{r}
+NeighborhoodSort <- tb %>%
+  group_by(Neighborhood) %>%
+  summarize(SalePrice = mean(SalePrice), YearBuilt = median(YearBuilt), TotalSold = n())
+NeighborhoodSort <- NeighborhoodSort %>% arrange(desc(SalePrice))
+NeighborhoodSort
+```
+
+## Question 8
+
+##### Create a .csv file containing the information for each neighborhood that you calculated in the previous question. Call the file "Neighborhoods.csv". Notice that the csv should appear in the lower right RStudio pane. At the end of the lab, you will submit the csv file along with your .html file. 
+
+```{r}
+write_csv(NeighborhoodSort, "Neighborhoods.csv")
+```
+
+
+## Question 9
+
+##### Calculate the number of homes sold during each month (not accounting for year), and the mean price of homes sold during each month. Create two scatterplots showning number sold and average price on the y-axis, with month on the x-axis. Describe your findings. Do certain months appear to be more popular for house sales than others? Does price appear to be associated with month sold?
+
+```{r}
+ toPlot <- tb %>%
+    group_by(MoSold) %>%
+  summarize(TotalSold = n(), SalePrice = mean(SalePrice))
+
+```
+
+```{r}
+ggplot(toPlot) +
+  geom_point(aes(x = MoSold, y=SalePrice),color="blue")
+```
+
+```{r}
+ggplot(toPlot) +
+  geom_point(aes(x = MoSold, y=TotalSold),color="red")
+```
+
+Spring into Summer seem to be the most popular months for houses to be sold - however looking at the price it looks like that's when they're generally the cheapest. For instance, August is the most expensive month aswell as the one of the lowest number sold. Price definitely looks like a factor 
+
+## Question 10
+
+##### Create a new yes/no variable indicating whether or not a home has a swimming pool, and calculate the percentage of homes in each neighborhood that contain a swimming pool. Note that if a house has no swimming pool, then `PoolArea` is 0. Order the neighborhoods from highest to lowest percentage with pools. 
+
+
+```{r}
+hasPool<- mutate(tb,
+       SwimmingPool = ifelse(PoolArea>0,"Y","N")
+) %>%
+  group_by(Neighborhood) %>%
+  arrange(desc(SwimmingPool))
+```
+
+
+## Question 11
+
+##### How many homes contain no garage? How many homes have a garage that was built the same year as the house? How many have a garage that was built after the house? How many garages were built befor the house?  Create and display a tibble that answers these questions. (Hint: the function `sign()` returns either 1, 0, or -1, depending on whether a quantity is positive, zero, or negative)
+
+```{r}
+df <- tibble("Houses Without Garage" = (tb %>% filter(is.na(GarageYrBlt)) %>%
+  summarise(count = n())), "Houses Built Same Year as Garage" = (tb %>% filter(GarageYrBlt == YearBuilt) %>%
+  summarise(count = n())))
+```
+
+81 homes contain no garage.
+1089 homes have a garage that was built the same year as the house.
+
+
+## Question 12
+
+##### For each decade after 1900, calculate the percentage of houses sold that had paved driveways, and the number of houses sold that were built in each decade (1900-1909, 1910-1919, etc.). How is the percentage of paved driveways associated with decade built? Hint: use the modular arithmetic operator %/% (see Section 5.5 of text).
+
+```{r}
+#type code here
+```
+
+Type answer here. 

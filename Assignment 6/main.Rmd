@@ -1,0 +1,169 @@
+---
+title: 'Data-Scientific Programming: Assignment 6'
+author: "Caleb Catt"
+date: "2/6/2020"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
+```
+
+
+##### Directions: Read [Chapter 13 in R for Data Science](https://r4ds.had.co.nz.html). As you read, answer the following questions. Also, think about the questions in the text's exercises and be prepared to answer and discuss these during class.
+
+##### Upload the html file containing your code and answers to Moodle. 
+
+```{r}
+library(tidyverse)
+```
+
+
+## Question 1
+
+We create two small fictional datasets. `Students` contains a list of fictional student id's, and the courses the students are enrolled in. Note there is a separate line for each course. `Costs` contains the total cost of textbooks and other materials for each course. 
+
+##### Use one of the join commands: `inner_join()`, `left_join`, `right_join()`, `full_join`, `semi_join`, and `anti_join` to create the following datasets. 
+
+```{r}
+id <- c(10576, 10576, 10576, 11439, 11439, 19857, 11306, 11306, 12576, 12576)
+course <-c("Calculus", "Art", "Economics", "Calculus", "Shakespeare", "History", "Economics", "Statistics", "Art", "Shakespeare")
+Students <- data.frame(id, course)
+Students
+```
+
+```{r}
+course <- c("Calculus", "Economics", "Shakespeare", "History", "Engineering")
+book_cost <- c(90, 75, 50, 80, 100)
+Costs <- data.frame(course, book_cost)
+Costs
+```
+
+##### a) Create and display a dataset, with the same number of rows as `Students`, containing the `book_cost` for each class. If the class does not appear in the `Costs` dataset, return `NA`. 
+
+```{r}
+Students %>% left_join(Costs, by = "course")
+```
+
+##### b) Create and display a version of the previous dataset that only includes courses with listed costs. 
+
+```{r}
+Students %>% inner_join(Costs, by = "course")
+```
+
+#### c) Create and display a dataset listing all classes, listed in `Costs` that at least one student is taking, along with the cost of books for the course. 
+
+```{r}
+Costs %>% inner_join(Students,by = "course")
+```
+
+#### d) Create and display a dataset listing the id's of all students who are taking a class not listed in `Costs`, as well as the unlisted class they are taking. 
+
+```{r}
+Students %>% anti_join(Costs, by = "course")
+```
+
+
+## Question 2
+
+##### Identify the key for each of the following datasets, that we've seen previously. Check your work using the count() command. 
+
+#### a) the 2018 movies dataset
+
+```{r}
+movies <- read.csv("https://raw.githubusercontent.com/AndrewjSage/andrewjsage.github.io/master/Datasets/movies2018.csv")
+```
+
+The key is the movie title as that will be unique to each movie. 
+
+```{r}
+movies %>% count(title) %>% filter(n>1)
+```
+
+##### b) the babynames dataset
+```{r}
+library(babynames)
+data(babynames)
+head(babynames)
+```
+
+
+Sex, year, and name combined give the key for this set.
+
+```{r}
+babynames %>% count(sex, year, name) %>% filter(n>1)
+```
+
+
+##### c) the diamonds dataset
+
+```{r}
+data(diamonds)
+head(diamonds)
+```
+
+
+This is one that needs a surrogate key since there are just SO many sample sizes. I introduced row_number() to give each sample a unique key 
+
+```{r}
+diamonds <- diamonds %>% mutate(row_number())
+diamonds %>% count(row_number()) %>% filter(n>1)
+```
+
+## Question 3 
+
+In question 1 on assignment 5, we noticed that the `flight_time` variable that we created did not match the `airtime` variable in the original dataset. One reason for this is because we did not account for changes in time zones when calculating flight time. We could not do this, since time zone was not included in the `flights` dataset. The `airports` dataset, shown in the textbook, contains this information. We'll use it to correct the timezone problem. 
+
+The following code creates new variables, converting departure and arrival times to minutes past midnight and calculating `flight_time` as you did for assignment 5. 
+
+```{r}
+library(nycflights13)
+data(flights)
+data(airports)
+flights <- flights %>% mutate(dep_hour = dep_time %/% 100,
+                               dep_min = dep_time %% 100,
+                               arr_hour = arr_time %/% 100,
+                               arr_min = arr_time %% 100,
+                               dep_time_min = 60*dep_hour + dep_min,
+                               arr_time_min = 60*arr_hour + arr_min,
+                               flight_time = ifelse(arr_time > dep_time, 
+                                                      arr_time_min-dep_time_min, 
+                                                    1440-dep_time_min + arr_time_min
+                               )
+                               )
+```
+
+
+```{r}
+head(airports)
+```
+In assignment 5, we obtained the follwing, less than ideal plot comparing `airtime` and our `flight_time` variable. 
+
+```{r}
+ggplot(flights, aes(x=air_time, y=flight_time)) +geom_point()
+```
+
+##### a) Join the `flights` and `airports` datasets, using an appropriate join command. Your new dataset should have the same number of rows as the original `flights` dataset, and should contain a column with the timezone of the destination airport. 
+
+```{r}
+flights_joined <- flights %>% left_join(airports, by = c("dest" = "faa"))
+```
+
+
+##### c) Recalculate the flight_time variable so that it correctly accounts for differences in timezones. 
+
+
+```{r}
+flights_joined <- flights_joined %>% mutate(flight_time = (flight_time - (-60 * -(tz + 5))))
+```
+
+##### d) Now plot `flight_time` against `air_time` Describe your observations. Has accounting for timezone improved the `flight_time` calculation? How might you explain the fact that these still do not match perfectly?
+
+
+```{r}
+ggplot(flights_joined, aes(x=air_time, y=flight_time)) +geom_point()
+```
+
+Adjusting for timezones greatly helped  the fit of flight_time vs air_time as seen in the correction of the 'lumps' caused by timezones. I think the shift is still caused by the fact that flight_time also measures boarding and disembarking. Since flight time is calculate by arrival and departure times, I believe these variables still include pre-flight checks and such.

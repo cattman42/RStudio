@@ -1,0 +1,18 @@
+---
+title: "Practice with RStudio and Github"
+author: "Lawrence University: cmsc 205"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Section 1
+
+This is a sentence. 
+
+Hamlet is the greatest play ever written.
+
+## Section 2
+
